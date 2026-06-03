@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chucca — Kampanyalar</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --border3: rgba(255,255,255,0.22);
+    --green: #00c896;
+    --green-bg: rgba(0,200,150,0.12);
+    --green-border: rgba(0,200,150,0.3);
+    --amber: #f0a500;
+    --amber-bg: rgba(240,165,0,0.1);
+    --amber-border: rgba(240,165,0,0.3);
+    --blue: #6ab0ff;
+    --blue-bg: rgba(100,160,255,0.1);
+    --red: #e24b4a;
+    --red-bg: rgba(226,75,74,0.1);
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --muted2: #6e7681;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif; color: var(--text); min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+  .sidebar-logo { padding: 24px 20px 20px; font-weight: 800; font-size: 20px; letter-spacing: 2px; color: var(--text); border-bottom: 0.5px solid var(--border); }
+  .nav { padding: 12px 0; flex: 1; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .nav-item.active { color: var(--text); background: rgba(0,200,150,0.08); border-left-color: var(--green); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-footer { padding: 16px 20px; border-top: 0.5px solid var(--border); }
+  .role-badge { background: var(--green-bg); border: 0.5px solid var(--green-border); color: var(--green); border-radius: 6px; font-size: 11px; font-weight: 600; padding: 6px 12px; text-align: center; }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; padding: 32px 36px; min-height: 100vh; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+  .page-title { font-size: 24px; font-weight: 600; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .btn-primary { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.88; }
+
+  /* CAMPAIGN CARDS */
+  .campaigns-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .campaign-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 12px; padding: 20px; position: relative; transition: border-color 0.15s; }
+  .campaign-card:hover { border-color: var(--border3); }
+  .badge { position: absolute; top: 16px; right: 16px; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
+  .badge-aktif { background: var(--green-bg); color: var(--green); border: 0.5px solid var(--green-border); }
+  .badge-pasif { background: rgba(255,255,255,0.04); color: var(--muted); border: 0.5px solid var(--border2); }
+  .card-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .card-icon svg { width: 20px; height: 20px; }
+  .card-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .card-desc { font-size: 12px; color: var(--muted); margin-bottom: 14px; min-height: 18px; }
+  .card-stat-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .card-stat-val { font-size: 22px; font-weight: 700; }
+  .card-stat-sub { font-size: 11px; color: var(--muted2); margin-bottom: 10px; }
+  .card-reward { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .card-reward span { color: var(--text); }
+  .card-type-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 7px; margin-bottom: 10px; }
+  .tag-percentage { background: var(--green-bg); color: var(--green); }
+  .tag-fixed { background: var(--amber-bg); color: var(--amber); }
+  .tag-variable { background: var(--blue-bg); color: var(--blue); }
+  .card-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-toggle { flex: 1; background: transparent; border: 0.5px solid var(--border2); color: var(--muted); border-radius: 8px; padding: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-toggle:hover { border-color: var(--border3); color: var(--text); }
+  .btn-icon { width: 34px; height: 34px; background: transparent; border: 0.5px solid var(--border2); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; color: var(--muted); }
+  .btn-icon:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .btn-icon.del:hover { background: var(--red-bg); color: var(--red); border-color: rgba(226,75,74,0.3); }
+  .btn-icon svg { width: 15px; height: 15px; }
+
+  /* SECTION */
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .section-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .new-label { font-size: 9px; font-weight: 800; background: var(--green); color: #000; border-radius: 4px; padding: 2px 6px; letter-spacing: 0.5px; }
+  .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+  /* NEW TYPE CARDS (reference panels) */
+  .new-types-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .new-card { background: var(--surface); border-radius: 12px; overflow: hidden; }
+  .new-card.tip1 { border: 1.5px solid var(--amber-border); }
+  .new-card.tip2 { border: 1.5px solid var(--green-border); }
+  .new-card-header { padding: 20px 20px 14px; }
+  .tip-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; font-size: 10px; font-weight: 700; padding: 3px 10px; margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tip1-badge { background: var(--amber-bg); border: 0.5px solid var(--amber-border); color: var(--amber); }
+  .tip2-badge { background: var(--green-bg); border: 0.5px solid var(--green-border); color: var(--green); }
+  .new-card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .new-card-sub { font-size: 12px; color: var(--muted); }
+
+  /* TIER EDITOR (reference panels) */
+  .tier-editor-section { padding: 16px 20px; border-top: 0.5px solid var(--border); }
+  .tier-section-title { font-size: 10px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .tier-editor-header { display: grid; gap: 6px; margin-bottom: 4px; }
+  .tier-editor-header span { font-size: 10px; color: var(--muted2); }
+  .tier-row { display: grid; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .cols3-layout { grid-template-columns: 1fr 1fr 80px 28px; }
+  .cols4-layout { grid-template-columns: 1fr 1fr 80px 28px; }
+  .tier-input { background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 6px; padding: 7px 10px; font-size: 12px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; }
+  .tier-input:focus { border-color: var(--border3); }
+  .tier-del-btn { width: 28px; height: 28px; background: var(--red-bg); border: none; border-radius: 5px; color: var(--red); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .tier-del-btn svg { width: 12px; height: 12px; }
+  .add-tier-btn { background: transparent; border: 0.5px dashed var(--border2); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 8px; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.15s; }
+  .add-tier-btn:hover { border-color: var(--border3); color: var(--text); }
+  .add-tier-btn svg { width: 14px; height: 14px; }
+
+  /* MODAL */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 16px; width: 560px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; }
+  .modal-header { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-shrink: 0; }
+  .modal-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .modal-close { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.15s; }
+  .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .modal-close svg { width: 18px; height: 18px; display: block; }
+  .modal-body { padding: 0 24px 8px; flex: 1; }
+
+  /* TYPE SELECTOR */
+  .type-selector-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .type-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .type-option { border: 1.5px solid var(--border2); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .type-option:hover { border-color: var(--border3); }
+  .type-option.sel-percentage { border-color: var(--green); background: var(--green-bg); }
+  .type-option.sel-fixed { border-color: var(--amber); background: var(--amber-bg); }
+  .type-option.sel-variable { border-color: var(--blue); background: var(--blue-bg); }
+  .type-option-icon { font-size: 18px; margin-bottom: 6px; font-weight: 700; }
+  .type-option-label { font-size: 11px; font-weight: 600; color: var(--text); }
+  .type-option-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* FORM */
+  .form-row { margin-bottom: 14px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .field-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .required { color: var(--red); }
+  .field-input { background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; font-family: inherit; }
+  .field-input:focus { border-color: var(--border3); }
+  .field-textarea { resize: vertical; min-height: 64px; }
+  .field-hint { font-size: 11px; color: var(--muted2); margin-top: 4px; }
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 18px 0; }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .tier-builder-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .modal-tier-header { display: grid; gap: 6px; margin-bottom: 4px; }
+  .modal-tier-header span { font-size: 10px; color: var(--muted2); }
+  .modal-tier-row { display: grid; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .cols3 { grid-template-columns: 1fr 1fr 90px 28px; }
+  .cols4 { grid-template-columns: 1fr 1fr 80px 28px; }
+
+  /* TOGGLE */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-top: 0.5px solid var(--border); margin-top: 4px; }
+  .toggle-label { font-size: 13px; color: var(--text); }
+  .toggle { position: relative; width: 40px; height: 22px; cursor: pointer; display: inline-block; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 22px; transition: 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: var(--green); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+  /* MODAL FOOTER */
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 24px; border-top: 0.5px solid var(--border); flex-shrink: 0; }
+  .btn-cancel { background: transparent; border: 0.5px solid var(--border2); color: var(--muted); border-radius: 8px; padding: 10px 18px; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border3); }
+  .btn-submit { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+  .btn-submit:hover { opacity: 0.88; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">CHUCCA</div>
+  <nav class="nav">
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Mağazalar
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Bekleyen Müşteriler
+    </div>
+    <div class="nav-item active">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      Kampanyalar
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Kullanıcılar
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Raporlar
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Grup Raporları
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="role-badge">Grup Sahibi</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Kampanyalar</div>
+      <div class="page-sub">Grup kampanyalarınızı yönetin</div>
+    </div>
+    <button class="btn-primary" onclick="openNewModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Yeni Kampanya
+    </button>
+  </div>
+
+  <div class="campaigns-grid">
+    <!-- Card 1: Percentage -->
+    <div class="campaign-card">
+      <div class="badge badge-aktif">Aktif</div>
+      <div class="card-icon" style="background:var(--green-bg);">
+        <svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      </div>
+      <div class="card-type-tag tag-percentage">% Sabit Oran</div>
+      <div class="card-name">test2</div>
+      <div class="card-desc">test2</div>
+      <div class="card-stat-label">Kazanç Oranı</div>
+      <div class="card-stat-val" style="color:var(--green)">%3</div>
+      <div class="card-stat-sub">1 ₺ = 1 puan (harcama)</div>
+      <div class="card-actions">
+        <button class="btn-toggle">Pasifleştir</button>
+        <button class="btn-icon" onclick="openEditModal('percentage','test2','test2',3,3,true,[],[])">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon del"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Card 2: Percentage -->
+    <div class="campaign-card">
+      <div class="badge badge-aktif">Aktif</div>
+      <div class="card-icon" style="background:var(--green-bg);">
+        <svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      </div>
+      <div class="card-type-tag tag-percentage">% Sabit Oran</div>
+      <div class="card-name">Grup Kahve Kampanyası</div>
+      <div class="card-desc">Her 100₺ alışverişte 2 puan</div>
+      <div class="card-stat-label">Kazanç Oranı</div>
+      <div class="card-stat-val" style="color:var(--green)">%2</div>
+      <div class="card-stat-sub">1 ₺ = 1 puan (harcama)</div>
+      <div class="card-actions">
+        <button class="btn-toggle">Pasifleştir</button>
+        <button class="btn-icon" onclick="openEditModal('percentage','Grup Kahve Kampanyası','Her 100₺ alışverişte 2 puan',2,'',true,[],[])">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon del"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Card 3: Fixed Tier -->
+    <div class="campaign-card">
+      <div class="badge badge-aktif">Aktif</div>
+      <div class="card-icon" style="background:var(--amber-bg);">
+        <svg style="color:var(--amber)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </div>
+      <div class="card-type-tag tag-fixed">▪ Sabit Puanlı</div>
+      <div class="card-name">Hafta Sonu Kampanyası</div>
+      <div class="card-desc">250₺'ye 25 puan, 500₺'ye 50 puan...</div>
+      <div class="card-stat-label">Maksimum Puan</div>
+      <div class="card-stat-val" style="color:var(--amber)">100</div>
+      <div class="card-stat-sub">1.000 ₺ ve üzeri alışverişte</div>
+      <div class="card-actions">
+        <button class="btn-toggle">Pasifleştir</button>
+        <button class="btn-icon" onclick="openEditModal('fixed','Hafta Sonu Kampanyası','250₺ ye 25 puan, 500₺ ye 50 puan',null,'',true,[{min:0,max:249,val:0},{min:250,max:499,val:25},{min:500,max:749,val:50},{min:750,max:999,val:75},{min:1000,max:null,val:100}],[])">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon del"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Card 4: Variable Rate -->
+    <div class="campaign-card">
+      <div class="badge badge-pasif">Pasif</div>
+      <div class="card-icon" style="background:var(--blue-bg);">
+        <svg style="color:var(--blue)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div class="card-type-tag tag-variable">∿ Değişken Oranlı</div>
+      <div class="card-name">Barem Kampanyası</div>
+      <div class="card-desc">0-250₺ %0,5 — 1000₺+ %3</div>
+      <div class="card-stat-label">Max Kazanç Oranı</div>
+      <div class="card-stat-val" style="color:var(--blue)">%3</div>
+      <div class="card-stat-sub">1.000 ₺ ve üzeri alışverişte</div>
+      <div class="card-actions">
+        <button class="btn-toggle">Aktifleştir</button>
+        <button class="btn-icon" onclick="openEditModal('variable','Barem Kampanyası','0-250₺ %0,5 — 1000₺+ %3',null,'',false,[],[{min:0,max:250,rate:0.5},{min:251,max:500,rate:1},{min:501,max:750,rate:1.5},{min:751,max:1000,rate:2},{min:1001,max:null,rate:3}])">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon del"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ YENİ KAMPANYA MODAL ============ -->
+<div class="overlay" id="new-modal-overlay" onclick="closeBg(event,'new-modal-overlay')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Yeni Kampanya</div>
+      <button class="modal-close" onclick="closeNewModal()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="type-selector-label">Kampanya Tipi <span class="required">*</span></div>
+      <div class="type-options">
+        <div class="type-option" id="new-type-percentage" onclick="selectNewType('percentage')">
+          <div class="type-option-icon" style="color:var(--green)">%</div>
+          <div class="type-option-label">Sabit Oran</div>
+          <div class="type-option-sub">Tek yüzde oranı</div>
+        </div>
+        <div class="type-option" id="new-type-fixed" onclick="selectNewType('fixed')">
+          <div class="type-option-icon" style="color:var(--amber)">▪</div>
+          <div class="type-option-label">Sabit Puanlı</div>
+          <div class="type-option-sub">Basamak → puan</div>
+        </div>
+        <div class="type-option" id="new-type-variable" onclick="selectNewType('variable')">
+          <div class="type-option-icon" style="color:var(--blue)">∿</div>
+          <div class="type-option-label">Değişken Oranlı</div>
+          <div class="type-option-sub">Barem → yüzde</div>
+        </div>
+      </div>
+      <div class="form-row"><div class="field-label">Kampanya Adı <span class="required">*</span></div><input class="field-input" type="text" placeholder="Örn: Hafta Sonu Kampanyası"></div>
+      <div class="form-row"><div class="field-label">Açıklama</div><textarea class="field-input field-textarea" placeholder="Kampanya açıklaması..."></textarea></div>
+      <div class="form-row"><div class="field-label">Puan Son Kullanma Süresi (gün)</div><input class="field-input" type="number" placeholder="Boş bırakırsanız süresiz"><div class="field-hint">Bu kampanyadan kazanılan puanlar kaç gün geçerli olacak?</div></div>
+      <hr class="divider">
+      <!-- percentage panel -->
+      <div class="panel active" id="new-panel-percentage">
+        <div class="form-row"><div class="field-label">Kazanç Yüzdesi (0–100) <span class="required">*</span></div><input class="field-input" type="number" placeholder="Örn: 3"><div class="field-hint">Her 100₺ harcamada kazanılacak puan yüzdesi</div></div>
+      </div>
+      <!-- fixed panel -->
+      <div class="panel" id="new-panel-fixed">
+        <div class="tier-builder-label">Puan Basamakları <span class="required">*</span></div>
+        <div class="modal-tier-header cols3"><span>Başlangıç (₺)</span><span>Bitiş (₺)</span><span>Puan</span><span></span></div>
+        <div id="new-fixed-tiers">
+          <div class="modal-tier-row cols3"><input class="tier-input" type="number" value="0"><input class="tier-input" type="number" placeholder="max"><input class="tier-input" type="number" placeholder="puan"><button class="tier-del-btn" onclick="removeTier(this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+        </div>
+        <button class="add-tier-btn" onclick="addTier('new-fixed-tiers','cols3',['number','number','number'])"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Basamak Ekle</button>
+        <div class="field-hint">Son satırda "Bitiş" boş bırakılırsa "ve üzeri" olarak yorumlanır.</div>
+      </div>
+      <!-- variable panel -->
+      <div class="panel" id="new-panel-variable">
+        <div class="tier-builder-label">Barem Oranları <span class="required">*</span></div>
+        <div class="modal-tier-header cols4"><span>Başlangıç (₺)</span><span>Bitiş (₺)</span><span>Oran (%)</span><span></span></div>
+        <div id="new-variable-tiers">
+          <div class="modal-tier-row cols4"><input class="tier-input" type="number" value="0"><input class="tier-input" type="number" placeholder="max"><input class="tier-input" type="number" step="0.1" placeholder="oran %"><button class="tier-del-btn" onclick="removeTier(this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+        </div>
+        <button class="add-tier-btn" onclick="addTier('new-variable-tiers','cols4',['number','number','number'])"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Barem Ekle</button>
+        <div class="field-hint">Son satırda "Bitiş" boş bırakılırsa "ve üzeri" olarak yorumlanır.</div>
+      </div>
+      <div class="toggle-row"><span class="toggle-label">Kampanya Aktif</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeNewModal()">İptal</button>
+      <button class="btn-submit"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DÜZENLE MODAL ============ -->
+<div class="overlay" id="edit-modal-overlay" onclick="closeBg(event,'edit-modal-overlay')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Kampanya Düzenle</div>
+      <button class="modal-close" onclick="closeEditModal()"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <!-- type indicator (read-only in edit mode) -->
+      <div id="edit-type-indicator" style="margin-bottom:18px;"></div>
+
+      <div class="form-row"><div class="field-label">Kampanya Adı <span class="required">*</span></div><input class="field-input" type="text" id="edit-name"></div>
+      <div class="form-row"><div class="field-label">Açıklama</div><textarea class="field-input field-textarea" id="edit-desc"></textarea></div>
+      <div class="form-row"><div class="field-label">Puan Son Kullanma Süresi (gün)</div><input class="field-input" type="number" id="edit-expiry" placeholder="Boş bırakırsanız süresiz"><div class="field-hint">Bu kampanyadan kazanılan puanlar kaç gün geçerli olacak?</div></div>
+      <hr class="divider">
+
+      <!-- percentage panel -->
+      <div class="panel" id="edit-panel-percentage">
+        <div class="form-row"><div class="field-label">Kazanç Yüzdesi (0–100) <span class="required">*</span></div><input class="field-input" type="number" id="edit-percentage" placeholder="Örn: 3"><div class="field-hint">Her 100₺ harcamada kazanılacak puan yüzdesi</div></div>
+      </div>
+
+      <!-- fixed panel -->
+      <div class="panel" id="edit-panel-fixed">
+        <div class="tier-builder-label">Puan Basamakları <span class="required">*</span></div>
+        <div class="modal-tier-header cols3"><span>Başlangıç (₺)</span><span>Bitiş (₺)</span><span>Puan</span><span></span></div>
+        <div id="edit-fixed-tiers"></div>
+        <button class="add-tier-btn" onclick="addTier('edit-fixed-tiers','cols3',['number','number','number'])"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Basamak Ekle</button>
+        <div class="field-hint">Son satırda "Bitiş" boş bırakılırsa "ve üzeri" olarak yorumlanır.</div>
+      </div>
+
+      <!-- variable panel -->
+      <div class="panel" id="edit-panel-variable">
+        <div class="tier-builder-label">Barem Oranları <span class="required">*</span></div>
+        <div class="modal-tier-header cols4"><span>Başlangıç (₺)</span><span>Bitiş (₺)</span><span>Oran (%)</span><span></span></div>
+        <div id="edit-variable-tiers"></div>
+        <button class="add-tier-btn" onclick="addTier('edit-variable-tiers','cols4',['number','number','number'])"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Barem Ekle</button>
+        <div class="field-hint">Son satırda "Bitiş" boş bırakılırsa "ve üzeri" olarak yorumlanır.</div>
+      </div>
+
+      <div class="toggle-row"><span class="toggle-label">Kampanya Aktif</span><label class="toggle"><input type="checkbox" id="edit-active"><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">İptal</button>
+      <button class="btn-submit"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Güncelle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---- HELPERS ---- */
+  const XIcon = `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  function closeBg(e, id) { if (e.target === document.getElementById(id)) document.getElementById(id).classList.remove('open'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNewModal(); closeEditModal(); } });
+
+  function removeTier(btn) { btn.closest('.modal-tier-row').remove(); }
+
+  function addTier(containerId, colClass, types) {
+    const c = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'modal-tier-row ' + colClass;
+    const inputs = types.map((t,i) => `<input class="tier-input" type="${t}" step="${t==='number'?'0.01':''}" placeholder="${['min','max (boş=üzeri)','değer'][i]}">`).join('');
+    row.innerHTML = inputs + `<button class="tier-del-btn" onclick="removeTier(this)">${XIcon}</button>`;
+    c.appendChild(row);
+    row.querySelector('input').focus();
+  }
+
+  function buildTierRow(colClass, vals) {
+    const row = document.createElement('div');
+    row.className = 'modal-tier-row ' + colClass;
+    const inputs = vals.map(v => `<input class="tier-input" type="number" step="0.01" value="${v ?? ''}" placeholder="${v === null ? 'üzeri' : ''}">`).join('');
+    row.innerHTML = inputs + `<button class="tier-del-btn" onclick="removeTier(this)">${XIcon}</button>`;
+    return row;
+  }
+
+  /* ---- NEW MODAL ---- */
+  let newType = null;
+  function openNewModal() {
+    document.getElementById('new-modal-overlay').classList.add('open');
+    if (!newType) selectNewType('percentage');
+  }
+  function closeNewModal() { document.getElementById('new-modal-overlay').classList.remove('open'); }
+  function selectNewType(t) {
+    newType = t;
+    ['percentage','fixed','variable'].forEach(x => {
+      document.getElementById('new-type-' + x).className = 'type-option';
+      document.getElementById('new-panel-' + x).className = 'panel';
+    });
+    document.getElementById('new-type-' + t).classList.add('sel-' + t);
+    document.getElementById('new-panel-' + t).classList.add('active');
+  }
+
+  /* ---- EDIT MODAL ---- */
+  function openEditModal(type, name, desc, percentage, expiry, active, fixedTiers, variableTiers) {
+    document.getElementById('edit-name').value = name;
+    document.getElementById('edit-desc').value = desc;
+    document.getElementById('edit-expiry').value = expiry || '';
+    document.getElementById('edit-active').checked = active;
+
+    // type indicator badge
+    const colors = { percentage: ['var(--green-bg)','var(--green-border)','var(--green)','% Sabit Oran'], fixed: ['var(--amber-bg)','var(--amber-border)','var(--amber)','▪ Sabit Puanlı'], variable: ['var(--blue-bg)','rgba(100,160,255,0.3)','var(--blue)','∿ Değişken Oranlı'] };
+    const [bg, border, color, label] = colors[type];
+    document.getElementById('edit-type-indicator').innerHTML =
+      `<span style="display:inline-flex;align-items:center;gap:6px;background:${bg};border:0.5px solid ${border};color:${color};border-radius:6px;font-size:11px;font-weight:700;padding:5px 12px;">
+        ${label} <span style="font-size:10px;color:var(--muted);font-weight:400;">— Kampanya tipi değiştirilemez</span>
+      </span>`;
+
+    // show correct panel
+    ['percentage','fixed','variable'].forEach(x => document.getElementById('edit-panel-' + x).className = 'panel');
+    document.getElementById('edit-panel-' + type).classList.add('active');
+
+    if (type === 'percentage') {
+      document.getElementById('edit-percentage').value = percentage || '';
+    }
+    if (type === 'fixed') {
+      const c = document.getElementById('edit-fixed-tiers');
+      c.innerHTML = '';
+      fixedTiers.forEach(t => c.appendChild(buildTierRow('cols3', [t.min, t.max, t.val])));
+    }
+    if (type === 'variable') {
+      const c = document.getElementById('edit-variable-tiers');
+      c.innerHTML = '';
+      variableTiers.forEach(t => c.appendChild(buildTierRow('cols4', [t.min, t.max, t.rate])));
+    }
+
+    document.getElementById('edit-modal-overlay').classList.add('open');
+  }
+  function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('open'); }
+</script>
+</body>
+</html>
