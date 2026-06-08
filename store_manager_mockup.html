@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chucca — Mağaza Yöneticisi</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1a7a4a; --green-light: #e8f5ee; --green-border: #c3e6d3;
+    --text: #1a1a1a; --text-sub: #6b7280; --text-light: #9ca3af;
+    --bg: #f8f9fa; --white: #ffffff; --border: #e5e7eb; --border-light: #f3f4f6;
+    --sidebar-w: 210px; --red: #dc2626; --blue: #3b82f6; --amber: #f59e0b; --orange: #f97316;
+    --amber-bg: rgba(245,158,11,0.1); --blue-bg: rgba(59,130,246,0.1);
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+  .sidebar { width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 10; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border-light); }
+  .logo-text { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: #111; font-style: italic; }
+  .logo-c { color: var(--green); }
+  .nav { flex: 1; padding: 8px 0; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13.5px; color: var(--text-sub); cursor: pointer; transition: all 0.15s; margin: 1px 8px; border-radius: 8px; }
+  .nav-item:hover { background: var(--border-light); color: var(--text); }
+  .nav-item.active { background: var(--green-light); color: var(--green); font-weight: 600; }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-profile { padding: 12px 16px; border-top: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .sidebar-profile:hover { background: var(--border-light); }
+  .profile-inner { display: flex; align-items: center; gap: 10px; }
+  .profile-avatar { width: 34px; height: 34px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-email { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-hint { font-size: 10px; color: var(--green); margin-top: 2px; }
+  .sidebar-logout { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13px; color: var(--text-sub); cursor: pointer; transition: all 0.15s; }
+  .sidebar-logout:hover { color: var(--red); }
+  .sidebar-logout svg { width: 16px; height: 16px; }
+  .main { margin-left: var(--sidebar-w); flex: 1; }
+  .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; height: 56px; }
+  .topbar-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--white); color: var(--text-sub); }
+  .topbar-btn.active { background: var(--green); color: white; border-color: var(--green); }
+  .topbar-role { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 600; }
+  .page { padding: 28px; }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 2px; margin-bottom: 24px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 4px; width: fit-content; }
+  .tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-sub); border-radius: 7px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 7px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--green-light); color: var(--green); font-weight: 600; }
+  .tab-count { font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+  .tab-count.aktif { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .tab-count.pasif { background: var(--border-light); color: var(--text-sub); }
+  .tab-count.tum { background: var(--border-light); color: var(--text-sub); }
+
+  /* CAMPAIGN CARDS */
+  .campaigns-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .camp-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); position: relative; }
+  .camp-badge { position: absolute; top: 14px; right: 14px; border-radius: 20px; font-size: 11px; font-weight: 600; padding: 2px 10px; }
+  .camp-badge.aktif { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .camp-badge.pasif { background: var(--border-light); color: var(--text-sub); border: 1px solid var(--border); }
+  .camp-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .camp-icon svg { width: 20px; height: 20px; }
+  .camp-type-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 7px; margin-bottom: 8px; }
+  .tag-percentage { background: var(--green-light); color: var(--green); }
+  .tag-fixed { background: var(--amber-bg); color: var(--amber); }
+  .tag-variable { background: var(--blue-bg); color: var(--blue); }
+  .camp-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .camp-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 14px; }
+  .camp-stat-box { background: var(--border-light); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .camp-stat-label { font-size: 11px; color: var(--text-sub); margin-bottom: 2px; }
+  .camp-stat-val { font-size: 22px; font-weight: 700; }
+  .camp-stat-sub { font-size: 11px; color: var(--text-light); }
+  .camp-expiry { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sub); background: var(--border-light); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; }
+  .camp-expiry svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .camp-expiry strong { color: var(--text); margin-left: 2px; }
+  .camp-note { font-size: 11px; color: var(--text-light); font-style: italic; border-top: 1px solid var(--border-light); padding-top: 10px; }
+
+  /* USERS TABLE */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .search-page-header { align-items: flex-start; gap: 20px; }
+  .search-page-header .page-sub { margin-bottom: 0; }
+  .phone-search { width: 260px; position: relative; flex-shrink: 0; }
+  .phone-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-light); pointer-events: none; }
+  .phone-search input { width: 100%; height: 38px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); padding: 0 12px 0 38px; font-size: 13px; color: var(--text); outline: none; box-shadow: var(--shadow); font-family: inherit; }
+  .phone-search input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,122,74,0.10); }
+  .phone-search input::placeholder { color: var(--text-light); }
+  .btn-add { background: var(--green); color: white; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-add svg { width: 14px; height: 14px; }
+  .users-table { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .table-header { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1fr 80px; gap: 12px; padding: 12px 20px; background: var(--border-light); font-size: 11px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+  .table-row { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1fr 80px; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--border-light); align-items: center; }
+  .table-row:hover { background: var(--border-light); }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; background: var(--green-light); color: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .user-email { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+  .role-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .role-badge.cashier { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .status-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .status-badge.aktif { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+  .status-badge.pasif { background: var(--border-light); color: var(--text-sub); border: 1px solid var(--border); }
+  .actions-cell { display: flex; gap: 6px; align-items: center; }
+  .btn-icon { width: 30px; height: 30px; background: transparent; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; color: var(--text-sub); }
+  .btn-icon:hover { background: var(--border-light); color: var(--text); }
+  .btn-icon.del:hover { background: #fef2f2; color: var(--red); border-color: #fca5a5; }
+  .btn-icon svg { width: 14px; height: 14px; }
+
+  /* QR */
+  .qr-page { display: flex; gap: 20px; }
+  .qr-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; box-shadow: var(--shadow); flex: 0 0 420px; }
+  .qr-img { width: 200px; height: 200px; border-radius: 8px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
+  .qr-img svg { width: 180px; height: 180px; }
+  .qr-store-name { font-size: 17px; font-weight: 700; color: var(--text); }
+  .qr-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+  .btn-primary { background: var(--green); color: white; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-secondary { background: var(--white); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-primary svg, .btn-secondary svg { width: 14px; height: 14px; }
+  .qr-info-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: var(--shadow); flex: 1; }
+  .qr-info-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .qr-info-title svg { width: 16px; height: 16px; color: var(--green); }
+  .qr-step { display: flex; gap: 14px; margin-bottom: 18px; }
+  .qr-step:last-child { margin-bottom: 0; }
+  .step-num { width: 24px; height: 24px; background: var(--green-light); color: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .step-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .step-sub { font-size: 12px; color: var(--text-sub); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: 16px; width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; }
+  .modal-head { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text-sub); padding: 4px; border-radius: 6px; }
+  .modal-close:hover { background: var(--border-light); }
+  .modal-close svg { width: 18px; height: 18px; display: block; }
+  .modal-body { padding: 20px 24px; }
+  .field-label { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-bottom: 6px; }
+  .field-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.15s; font-family: inherit; background: var(--white); }
+  .field-input:focus { border-color: var(--green); }
+  .field-input:disabled { background: var(--border-light); color: var(--text-sub); cursor: not-allowed; }
+  .field-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .field-hint svg { width: 11px; height: 11px; }
+  .form-row { margin-bottom: 14px; }
+  .switch-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .switch-input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch-control { width: 44px; height: 22px; border-radius: 999px; background: var(--border); position: relative; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+  .switch-control::after { content: ""; position: absolute; width: 18px; height: 18px; top: 2px; left: 2px; border-radius: 50%; background: var(--white); box-shadow: 0 1px 2px rgba(0,0,0,0.18); transition: transform 0.15s; }
+  .switch-input:checked + .switch-control { background: var(--green); }
+  .switch-input:checked + .switch-control::after { transform: translateX(22px); }
+  .switch-label { font-size: 13px; color: var(--text); user-select: none; cursor: pointer; }
+  .fixed-field-wrapper { position: relative; }
+  .fixed-lock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text-light); pointer-events: none; }
+  .fixed-lock svg { width: 13px; height: 13px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-cancel { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 9px 18px; font-size: 13px; color: var(--text-sub); cursor: pointer; }
+  .btn-save { background: var(--green); color: white; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-save svg { width: 13px; height: 13px; }
+  .modal-profile-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 14px; background: var(--border-light); border-radius: 10px; }
+  .modal-avatar { width: 44px; height: 44px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .modal-name { font-size: 14px; font-weight: 600; }
+  .modal-email { font-size: 12px; color: var(--text-sub); }
+  .pw-section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+
+  /* RAPORLAR - kart */
+  .rep-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+  .rep-card-head { padding: 14px 20px; border-bottom: 1px solid var(--border-light); }
+  .rep-card-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+  .rep-card-title svg { width: 15px; height: 15px; }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .kpi-card-inner { display: flex; align-items: center; gap: 14px; }
+  .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kpi-icon svg { width: 20px; height: 20px; }
+  .kpi-icon.green { background: var(--green-light); color: var(--green); }
+  .kpi-icon.blue { background: #eff6ff; color: var(--blue); }
+  .kpi-icon.amber { background: rgba(245,158,11,0.1); color: var(--amber); }
+  .kpi-icon.purple { background: #f5f3ff; color: #7c3aed; }
+  .kpi-icon.red-bg { background: #fef2f2; color: var(--red); }
+  .kpi-val { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .kpi-label { font-size: 12px; color: var(--text-sub); }
+  .kpi-blob { position: absolute; right: -20px; top: -20px; width: 90px; height: 90px; border-radius: 50%; opacity: 0.15; }
+
+  /* DASHBOARD ALT KARTLAR */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .dash-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .dash-card-head { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); }
+  .dash-card-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .dash-card-title svg { width: 15px; height: 15px; }
+  .dash-card-link { font-size: 12px; color: var(--green); font-weight: 500; cursor: pointer; }
+  .dash-card-body { padding: 0; }
+
+  /* BEKLEYEN - boş durum */
+  .empty-dash { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; color: var(--text-light); gap: 10px; }
+  .empty-dash svg { width: 32px; height: 32px; opacity: 0.3; }
+  .empty-dash p { font-size: 13px; }
+
+  /* SON İŞLEMLER satırları */
+  .tx-row { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border-light); }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-dot { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .tx-dot.kaz { background: var(--green-light); }
+  .tx-dot.har { background: #fef2f2; }
+  .tx-dot svg { width: 14px; height: 14px; }
+  .tx-body { flex: 1; }
+  .tx-pts { font-size: 13px; font-weight: 600; }
+  .tx-pts.pos { color: var(--green); }
+  .tx-pts.neg { color: var(--red); }
+  .tx-meta { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+  .tx-tag { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+  .tx-tag.kaz { color: var(--green); background: var(--green-light); }
+  .tx-tag.har { color: var(--red); background: #fef2f2; }
+  @media (max-width: 760px) {
+    .search-page-header { flex-direction: column; align-items: stretch; }
+    .phone-search { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text"><span class="logo-c">C</span>HUCCA</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item" id="nav-dashboard" onclick="showView('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" id="nav-pending" onclick="showView('pending')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Bekleyen Müşteriler
+    </div>
+    <div class="nav-item" id="nav-transactions" onclick="showView('transactions')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Son İşlemler
+    </div>
+    <div class="nav-item" id="nav-campaigns" onclick="showView('campaigns')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      Kampanyalar
+    </div>
+    <div class="nav-item" id="nav-qr" onclick="showView('qr')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3M21 21v-1M16 16v5M11 3v2M11 8v1M3 11h2M8 11h5M11 16h2M11 21h2"/></svg>
+      QR Kod
+    </div>
+    <div class="nav-item" id="nav-users" onclick="showView('users')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Kullanıcılar
+    </div>
+    <div class="nav-item" id="nav-reports" onclick="showView('reports')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Raporlar
+    </div>
+    <!-- Grup Raporları: Mağaza Yöneticisi göremez — kasıtlı olarak menüde yer almıyor -->
+  </nav>
+
+  <div class="sidebar-profile" onclick="openModal('profile-modal')">
+    <div class="profile-inner">
+      <div class="profile-avatar">M</div>
+      <div class="profile-info">
+        <div class="profile-name">Mehmet Merkez Yöneticisi</div>
+        <div class="profile-email">manager.merkez@kafezinciri...</div>
+        <div class="profile-hint">Profil &amp; Şifre →</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-logout">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Çıkış Yap
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-btn active">TR</div>
+    <div class="topbar-btn">EN</div>
+    <div class="topbar-role">Mağaza Yöneticisi</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="page">
+      <div class="page-title">Hoş Geldiniz, Mehmet Merkez Yöneticisi</div>
+      <div class="page-sub" style="margin-bottom:20px;">Mağazanızın özet bilgileri</div>
+
+      <!-- 4 KPI KARTI -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-blob" style="background:#6b7280;"></div>
+          <div class="kpi-icon green" style="margin-bottom:16px;"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="kpi-val">3</div>
+          <div class="kpi-label">Toplam Müşteri</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-blob" style="background:#3b82f6;"></div>
+          <div class="kpi-icon green" style="margin-bottom:16px;"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+          <div class="kpi-val">15</div>
+          <div class="kpi-label">Verilen Puan</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-blob" style="background:#3b82f6;"></div>
+          <div class="kpi-icon amber" style="margin-bottom:16px;"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="1 6 1 18 13.5 15.5 23 6"/></svg></div>
+          <div class="kpi-val">9</div>
+          <div class="kpi-label">Harcanan Puan</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-blob" style="background:#f59e0b;"></div>
+          <div class="kpi-icon amber" style="margin-bottom:16px;"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="kpi-val">0</div>
+          <div class="kpi-label">Bekleyen İşlem</div>
+        </div>
+      </div>
+
+      <!-- ALT KARTLAR: Bekleyen Müşteriler + Son İşlemler -->
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">
+              <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Bekleyen Müşteriler
+            </div>
+            <div class="dash-card-link" onclick="showView('pending')">Tümünü Gör →</div>
+          </div>
+          <div class="dash-card-body">
+            <div class="empty-dash">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <p>Bekleyen müşteri yok</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-head">
+            <div class="dash-card-title">
+              <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--green)"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/></svg>
+              Son İşlemler
+            </div>
+            <div class="dash-card-link" onclick="showView('transactions')">Tümünü Gör →</div>
+          </div>
+          <div class="dash-card-body">
+            <div class="tx-row">
+              <div class="tx-dot har"><svg style="color:var(--red)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 6 1 18 13.5 15.5 23 6"/></svg></div>
+              <div class="tx-body">
+                <div class="tx-pts neg">-8 puan</div>
+                <div class="tx-meta">0554 *** ** 64 · 01.06.2026 14:11:43</div>
+              </div>
+              <span class="tx-tag har">Harcama</span>
+            </div>
+            <div class="tx-row">
+              <div class="tx-dot kaz"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+              <div class="tx-body">
+                <div class="tx-pts pos">+9 puan</div>
+                <div class="tx-meta">0554 *** ** 64 · 01.06.2026 14:09:56</div>
+              </div>
+              <span class="tx-tag kaz">Kazanım</span>
+            </div>
+            <div class="tx-row">
+              <div class="tx-dot kaz"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+              <div class="tx-body">
+                <div class="tx-pts pos">+4 puan</div>
+                <div class="tx-meta">0532 *** ** 59 · 25.05.2026 14:01:28</div>
+              </div>
+              <span class="tx-tag kaz">Kazanım</span>
+            </div>
+            <div class="tx-row">
+              <div class="tx-dot kaz"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+              <div class="tx-body">
+                <div class="tx-pts pos">+2 puan</div>
+                <div class="tx-meta">*** *** ** ** · 23.05.2026 18:19:42</div>
+              </div>
+              <span class="tx-tag kaz">Kazanım</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEKLEYEN MÜŞTERİLER -->
+  <div class="view" id="view-pending">
+    <div class="page">
+      <div class="page-header search-page-header">
+        <div>
+          <div class="page-title">Bekleyen Müşteriler</div>
+          <div class="page-sub">Onay bekleyen müşteri kayıtları</div>
+        </div>
+        <label class="phone-search" aria-label="Müşteri telefon son 4 hane ara">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Tel no son 4 hane ara">
+        </label>
+      </div>
+      <div style="text-align:center;padding:64px;color:var(--text-light);">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width:36px;height:36px;opacity:0.3;margin:0 auto 10px;display:block;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Bekleyen müşteri yok
+      </div>
+    </div>
+  </div>
+
+  <!-- SON İŞLEMLER -->
+  <div class="view" id="view-transactions">
+    <div class="page">
+      <div class="page-header search-page-header">
+        <div>
+          <div class="page-title">Son İşlemler</div>
+          <div class="page-sub">Mağazanızdaki tüm puan hareketleri</div>
+        </div>
+        <label class="phone-search" aria-label="Müşteri telefon son 4 hane ara">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Tel no son 4 hane ara">
+        </label>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--border-light);">
+              <th style="padding:11px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Telefon</th>
+              <th style="padding:11px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Tarih</th>
+              <th style="padding:11px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Tip</th>
+              <th style="padding:11px 20px;text-align:right;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Puan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-top:1px solid var(--border-light);">
+              <td style="padding:13px 20px;font-size:13px;font-weight:500;">0554 *** ** 64</td>
+              <td style="padding:13px 20px;font-size:13px;color:var(--text-sub);">01.06.2026 14:11:43</td>
+              <td style="padding:13px 20px;"><span style="background:#fef2f2;color:var(--red);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Harcama</span></td>
+              <td style="padding:13px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--red);">−8</td>
+            </tr>
+            <tr style="border-top:1px solid var(--border-light);">
+              <td style="padding:13px 20px;font-size:13px;font-weight:500;">0554 *** ** 64</td>
+              <td style="padding:13px 20px;font-size:13px;color:var(--text-sub);">01.06.2026 14:09:56</td>
+              <td style="padding:13px 20px;"><span style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Kazanım</span></td>
+              <td style="padding:13px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--green);">+9</td>
+            </tr>
+            <tr style="border-top:1px solid var(--border-light);">
+              <td style="padding:13px 20px;font-size:13px;font-weight:500;">0532 *** ** 59</td>
+              <td style="padding:13px 20px;font-size:13px;color:var(--text-sub);">25.05.2026 14:01:28</td>
+              <td style="padding:13px 20px;"><span style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Kazanım</span></td>
+              <td style="padding:13px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--green);">+4</td>
+            </tr>
+            <tr style="border-top:1px solid var(--border-light);">
+              <td style="padding:13px 20px;font-size:13px;font-weight:500;">*** *** ** **</td>
+              <td style="padding:13px 20px;font-size:13px;color:var(--text-sub);">23.05.2026 18:19:42</td>
+              <td style="padding:13px 20px;"><span style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Kazanım</span></td>
+              <td style="padding:13px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--green);">+2</td>
+            </tr>
+            <tr style="border-top:1px solid var(--border-light);">
+              <td style="padding:13px 20px;font-size:13px;font-weight:500;">0532 *** ** 59</td>
+              <td style="padding:13px 20px;font-size:13px;color:var(--text-sub);">20.05.2026 11:23:07</td>
+              <td style="padding:13px 20px;"><span style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Kazanım</span></td>
+              <td style="padding:13px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--green);">+8</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KAMPANYALAR -->
+  <div class="view" id="view-campaigns">
+    <div class="page">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div class="page-title">Kampanyalar</div>
+          <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">Mağazanıza tanımlı kampanyaları görüntüleyin</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--border-light);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:12px;color:var(--text-sub);">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:13px;height:13px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Grup Sahibi tarafından yönetilir
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchCampTab('aktif',this)">Aktif Kampanyalar <span class="tab-count aktif">3</span></div>
+        <div class="tab" onclick="switchCampTab('pasif',this)">Pasif Kampanyalar <span class="tab-count pasif">1</span></div>
+        <div class="tab" onclick="switchCampTab('tum',this)">Tüm Kampanyalar <span class="tab-count tum">4</span></div>
+      </div>
+
+      <!-- AKTİF -->
+      <div id="camp-tab-aktif" class="campaigns-grid">
+        <div class="camp-card">
+          <span class="camp-badge aktif">Aktif</span>
+          <div class="camp-icon" style="background:var(--green-light)"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div>
+          <div class="camp-type-tag tag-percentage">% Sabit Oran</div>
+          <div class="camp-name">test2</div>
+          <div class="camp-desc">test2</div>
+          <div class="camp-stat-box"><div class="camp-stat-label">Kazanç Oranı</div><div class="camp-stat-val" style="color:var(--green)">%3</div><div class="camp-stat-sub">1 ₺ = 1 puan (harcama)</div></div>
+          <div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>3 gün</strong></div>
+          <div class="camp-note">Bu kampanya grup merkezi tarafından yönetilmektedir</div>
+        </div>
+        <div class="camp-card">
+          <span class="camp-badge aktif">Aktif</span>
+          <div class="camp-icon" style="background:var(--green-light)"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div>
+          <div class="camp-type-tag tag-percentage">% Sabit Oran</div>
+          <div class="camp-name">Grup Kahve Kampanyası</div>
+          <div class="camp-desc">Her 100₺ alışverişte 2 puan</div>
+          <div class="camp-stat-box"><div class="camp-stat-label">Kazanç Oranı</div><div class="camp-stat-val" style="color:var(--green)">%2</div><div class="camp-stat-sub">1 ₺ = 1 puan (harcama)</div></div>
+          <div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>Süresiz</strong></div>
+          <div class="camp-note">Bu kampanya grup merkezi tarafından yönetilmektedir</div>
+        </div>
+        <div class="camp-card">
+          <span class="camp-badge aktif">Aktif</span>
+          <div class="camp-icon" style="background:var(--amber-bg)"><svg style="color:var(--amber)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="camp-type-tag tag-fixed">▪ Sabit Puanlı</div>
+          <div class="camp-name">Hafta Sonu Kampanyası</div>
+          <div class="camp-desc">250₺'ye 25 puan, 500₺'ye 50 puan...</div>
+          <div class="camp-stat-box"><div class="camp-stat-label">Maksimum Puan</div><div class="camp-stat-val" style="color:var(--amber)">100</div><div class="camp-stat-sub">1.000 ₺ ve üzeri alışverişte</div></div>
+          <div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>30 gün</strong></div>
+          <div class="camp-note">Bu kampanya grup merkezi tarafından yönetilmektedir</div>
+        </div>
+      </div>
+
+      <!-- PASİF -->
+      <div id="camp-tab-pasif" class="campaigns-grid" style="display:none">
+        <div class="camp-card">
+          <span class="camp-badge pasif">Pasif</span>
+          <div class="camp-icon" style="background:var(--blue-bg)"><svg style="color:var(--blue)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+          <div class="camp-type-tag tag-variable">∿ Değişken Oranlı</div>
+          <div class="camp-name">Barem Kampanyası</div>
+          <div class="camp-desc">0-250₺ %0,5 — 1000₺+ %3</div>
+          <div class="camp-stat-box"><div class="camp-stat-label">Max Kazanç Oranı</div><div class="camp-stat-val" style="color:var(--blue)">%3</div><div class="camp-stat-sub">1.000 ₺ ve üzeri alışverişte</div></div>
+          <div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>Süresiz</strong></div>
+          <div class="camp-note">Bu kampanya grup merkezi tarafından yönetilmektedir</div>
+        </div>
+      </div>
+
+      <!-- TÜM -->
+      <div id="camp-tab-tum" class="campaigns-grid" style="display:none">
+        <div class="camp-card"><span class="camp-badge aktif">Aktif</span><div class="camp-icon" style="background:var(--green-light)"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div><div class="camp-type-tag tag-percentage">% Sabit Oran</div><div class="camp-name">test2</div><div class="camp-desc">test2</div><div class="camp-stat-box"><div class="camp-stat-label">Kazanç Oranı</div><div class="camp-stat-val" style="color:var(--green)">%3</div><div class="camp-stat-sub">1 ₺ = 1 puan</div></div><div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>3 gün</strong></div><div class="camp-note">Grup merkezi tarafından yönetilmektedir</div></div>
+        <div class="camp-card"><span class="camp-badge aktif">Aktif</span><div class="camp-icon" style="background:var(--green-light)"><svg style="color:var(--green)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div><div class="camp-type-tag tag-percentage">% Sabit Oran</div><div class="camp-name">Grup Kahve Kampanyası</div><div class="camp-desc">Her 100₺ alışverişte 2 puan</div><div class="camp-stat-box"><div class="camp-stat-label">Kazanç Oranı</div><div class="camp-stat-val" style="color:var(--green)">%2</div><div class="camp-stat-sub">1 ₺ = 1 puan</div></div><div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>Süresiz</strong></div><div class="camp-note">Grup merkezi tarafından yönetilmektedir</div></div>
+        <div class="camp-card"><span class="camp-badge aktif">Aktif</span><div class="camp-icon" style="background:var(--amber-bg)"><svg style="color:var(--amber)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div><div class="camp-type-tag tag-fixed">▪ Sabit Puanlı</div><div class="camp-name">Hafta Sonu Kampanyası</div><div class="camp-desc">250₺'ye 25 puan, 500₺'ye 50 puan...</div><div class="camp-stat-box"><div class="camp-stat-label">Maks. Puan</div><div class="camp-stat-val" style="color:var(--amber)">100</div><div class="camp-stat-sub">1.000 ₺+ alışverişte</div></div><div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>30 gün</strong></div><div class="camp-note">Grup merkezi tarafından yönetilmektedir</div></div>
+        <div class="camp-card"><span class="camp-badge pasif">Pasif</span><div class="camp-icon" style="background:var(--blue-bg)"><svg style="color:var(--blue)" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="camp-type-tag tag-variable">∿ Değişken Oranlı</div><div class="camp-name">Barem Kampanyası</div><div class="camp-desc">0-250₺ %0,5 — 1000₺+ %3</div><div class="camp-stat-box"><div class="camp-stat-label">Max Oran</div><div class="camp-stat-val" style="color:var(--blue)">%3</div><div class="camp-stat-sub">1.000 ₺+ alışverişte</div></div><div class="camp-expiry"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Puan geçerlilik: <strong>Süresiz</strong></div><div class="camp-note">Grup merkezi tarafından yönetilmektedir</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KULLANICILAR -->
+  <div class="view" id="view-users">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Kullanıcılar</div>
+          <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">Mağazanızın kasa görevlilerini yönetin</div>
+        </div>
+        <button class="btn-add" onclick="openModal('add-user-modal')">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni Kullanıcı
+        </button>
+      </div>
+      <div class="users-table">
+        <div class="table-header">
+          <span>Kullanıcı</span><span>Rol</span><span>Mağaza</span><span>Durum</span><span>İşlemler</span>
+        </div>
+        <!-- Kendisi (Mehmet Merkez Yöneticisi) listede görünmüyor — madde 4 -->
+        <div class="table-row">
+          <div class="user-info">
+            <div class="user-avatar">M</div>
+            <div>
+              <div class="user-name">Merkez Kasa</div>
+              <div class="user-email">cashier.merkez@kafezinciri.com</div>
+            </div>
+          </div>
+          <span class="role-badge cashier">Kasa Görevlisi</span>
+          <span style="font-size:13px;color:var(--text)">Kafe Merkez</span>
+          <span class="status-badge aktif">Aktif</span>
+          <div class="actions-cell">
+            <!-- Aktifleştir / Pasifleştir kaldırıldı — madde 3.4 -->
+            <button class="btn-icon" title="Düzenle" onclick="openModal('edit-user-modal')">
+              <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn-icon del" title="Sil">
+              <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR KOD -->
+  <div class="view" id="view-qr">
+    <div class="page">
+      <div class="page-title">QR Kod</div>
+      <div class="page-sub">Müşterilerinizin sadakat programına katılması için QR kodu sergileyin</div>
+      <div class="qr-page">
+        <div class="qr-card">
+          <div class="qr-img">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="22" fill="#25D366"/>
+              <path d="M107 93c-1.5-1.5-3.5-2.5-5.5-2.5-4.5 0-8 3.5-8 8 0 1.5.4 3 1.2 4.2l-1.2 4.8 4.9-1.3c1.2.7 2.5 1 3.9 1 4.5 0 8-3.5 8-8 0-2-.8-3.9-2.3-5.2zm-5.5 12.3c-1.1 0-2.1-.3-3-.8l-.2-.1-2.9.8.8-2.8-.2-.2c-.6-1-.9-2-.9-3.2 0-3.3 2.7-6 6-6 1.6 0 3.1.6 4.2 1.7 1.1 1.1 1.8 2.6 1.8 4.2.1 3.4-2.6 6.1-5.9 6.1l.3.3zm3.3-4.5c-.2-.1-1.1-.5-1.2-.6-.2-.1-.3-.1-.4.1-.1.2-.5.6-.6.7-.1.1-.2.1-.4 0-.2-.1-.8-.3-1.5-.9-.6-.5-1-1.1-1.1-1.3-.1-.2 0-.3.1-.4l.3-.3c.1-.1.1-.2.2-.3 0-.1 0-.2 0-.3-.1-.1-.4-1-.6-1.4-.2-.3-.3-.3-.4-.3h-.4c-.1 0-.3.1-.5.2-.2.2-.6.6-.6 1.4s.6 1.6.7 1.7c.1.1 1.2 1.8 2.9 2.5.4.2.7.3 1 .4.4.1.8.1 1.1.1.3 0 1-.4 1.1-.8.1-.4.1-.7 0-.8l-.6-.2z" fill="white"/>
+              <rect x="20" y="20" width="50" height="50" rx="4" fill="none" stroke="#111" stroke-width="5"/>
+              <rect x="30" y="30" width="30" height="30" rx="2" fill="#111"/>
+              <rect x="130" y="20" width="50" height="50" rx="4" fill="none" stroke="#111" stroke-width="5"/>
+              <rect x="140" y="30" width="30" height="30" rx="2" fill="#111"/>
+              <rect x="20" y="130" width="50" height="50" rx="4" fill="none" stroke="#111" stroke-width="5"/>
+              <rect x="30" y="140" width="30" height="30" rx="2" fill="#111"/>
+              <rect x="90" y="20" width="8" height="8" fill="#111"/><rect x="102" y="20" width="8" height="8" fill="#111"/><rect x="114" y="20" width="8" height="8" fill="#111"/>
+              <rect x="90" y="32" width="8" height="8" fill="#111"/><rect x="114" y="32" width="8" height="8" fill="#111"/>
+              <rect x="20" y="90" width="8" height="8" fill="#111"/><rect x="32" y="90" width="8" height="8" fill="#111"/><rect x="44" y="90" width="8" height="8" fill="#111"/>
+              <rect x="20" y="102" width="8" height="8" fill="#111"/><rect x="44" y="114" width="8" height="8" fill="#111"/>
+              <rect x="90" y="90" width="8" height="8" fill="#111"/><rect x="102" y="90" width="8" height="8" fill="#111"/><rect x="90" y="102" width="8" height="8" fill="#111"/>
+              <rect x="114" y="114" width="8" height="8" fill="#111"/><rect x="130" y="90" width="8" height="8" fill="#111"/>
+              <rect x="142" y="90" width="8" height="8" fill="#111"/><rect x="130" y="102" width="8" height="8" fill="#111"/>
+              <rect x="154" y="90" width="8" height="8" fill="#111"/><rect x="166" y="102" width="8" height="8" fill="#111"/>
+              <rect x="130" y="130" width="8" height="8" fill="#111"/><rect x="154" y="130" width="8" height="8" fill="#111"/>
+              <rect x="142" y="142" width="8" height="8" fill="#111"/><rect x="166" y="154" width="8" height="8" fill="#111"/>
+            </svg>
+          </div>
+          <div class="qr-store-name">Kafe Merkez</div>
+          <!-- Meta Kod YOK — Mağaza Yöneticisi sadece görüntüleyebilir, madde 2 -->
+          <div class="qr-actions">
+            <button class="btn-primary">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PNG İndir
+            </button>
+            <button class="btn-secondary">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Yazdır
+            </button>
+            <button class="btn-secondary">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Link Kopyala
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:4px;">QR kodu yalnızca görüntüleyebilirsiniz</div>
+        </div>
+        <div class="qr-info-card">
+          <div class="qr-info-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Nasıl Çalışır?
+          </div>
+          <div class="qr-step"><div class="step-num">1</div><div><div class="step-title">Müşteri QR kodu okuttur</div><div class="step-sub">Telefon kamerasıyla veya QR okuyucu ile</div></div></div>
+          <div class="qr-step"><div class="step-num">2</div><div><div class="step-title">WhatsApp açılır</div><div class="step-sub">Hazır mesaj ile birlikte</div></div></div>
+          <div class="qr-step"><div class="step-num">3</div><div><div class="step-title">Mesajı gönderir</div><div class="step-sub">Kayıt veya puan sorgulama için</div></div></div>
+          <div class="qr-step"><div class="step-num">4</div><div><div class="step-title">Bekleyen listede görünür</div><div class="step-sub">Kasa görevlisi son 4 hane ile doğrular</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAPORLAR -->
+  <div class="view" id="view-reports">
+    <div class="page">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+        <div>
+          <div class="page-title">Raporlar</div>
+          <div class="page-sub">Puan ve müşteri istatistikleriniz</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+          <select style="border:1px solid var(--border);border-radius:8px;padding:8px 32px 8px 12px;font-size:13px;color:var(--text);background:var(--white);cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236b7280' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+            <option>Bu Ay</option><option>Geçen Ay</option><option>Son 3 Ay</option><option>Bu Yıl</option>
+          </select>
+          <button class="btn-primary">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV İndir
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI -->
+      <div class="kpi-grid" style="margin-top:20px;margin-bottom:20px;">
+        <div class="kpi-card">
+          <div class="kpi-icon green"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+          <div><div class="kpi-val" style="color:var(--green)">9</div><div class="kpi-label">Verilen Puan</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#fef2f2;color:var(--red);"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="1 6 1 18 13.5 15.5 23 6"/></svg></div>
+          <div><div class="kpi-val" style="color:var(--red)">8</div><div class="kpi-label">Harcanan Puan</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon blue"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div><div class="kpi-val">2</div><div class="kpi-label">Toplam İşlem</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon orange"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div><div class="kpi-val">1</div><div class="kpi-label">Aktif Müşteri</div></div>
+        </div>
+      </div>
+
+      <!-- Açık Puan Özeti -->
+      <div class="rep-card" style="margin-bottom:16px;">
+        <div class="rep-card-head"><div class="rep-card-title">Açık Puan Özeti</div></div>
+        <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+          <div style="background:var(--border-light);border-radius:10px;padding:16px;">
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">Toplam Verilen</div>
+            <div style="font-size:26px;font-weight:700;color:var(--green)">+9</div>
+          </div>
+          <div style="background:var(--border-light);border-radius:10px;padding:16px;">
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">Toplam Harcanan</div>
+            <div style="font-size:26px;font-weight:700;color:var(--red)">−8</div>
+          </div>
+          <div style="background:var(--border-light);border-radius:10px;padding:16px;">
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">Açık Puan Yükü</div>
+            <div style="font-size:26px;font-weight:700;color:var(--text)">1</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Son İşlemler -->
+      <div class="rep-card">
+        <div class="rep-card-head">
+          <div class="rep-card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--orange)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Son İşlemler
+          </div>
+        </div>
+        <div style="padding:0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--border-light);">
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Tarih</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Tip</th>
+                <th style="padding:10px 20px;text-align:right;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Puan</th>
+                <th style="padding:10px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;">Kaynak</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-top:1px solid var(--border-light);">
+                <td style="padding:14px 20px;font-size:13px;">01.06.2026 14:11:43</td>
+                <td style="padding:14px 20px;"><span style="background:#fef2f2;color:var(--red);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Harcama</span></td>
+                <td style="padding:14px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--red);">−8</td>
+                <td style="padding:14px 20px;font-size:13px;color:var(--text-sub);">QR Kod</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border-light);">
+                <td style="padding:14px 20px;font-size:13px;">01.06.2026 14:09:56</td>
+                <td style="padding:14px 20px;"><span style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;">Kazanım</span></td>
+                <td style="padding:14px 20px;text-align:right;font-size:13px;font-weight:600;color:var(--green);">+9</td>
+                <td style="padding:14px 20px;font-size:13px;color:var(--text-sub);">QR Kod</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- YENİ KULLANICI MODAL -->
+<div class="modal-overlay" id="add-user-modal" onclick="closeBg(event,'add-user-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Yeni Kasa Görevlisi Ekle</div>
+      <button class="modal-close" onclick="closeModal('add-user-modal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <!-- Rol: fixed, değiştirilemez — madde 3.1 -->
+      <div class="form-row">
+        <div class="field-label">Rol</div>
+        <div class="fixed-field-wrapper">
+          <input class="field-input" type="text" value="Kasa Görevlisi" disabled style="padding-right:32px;">
+          <span class="fixed-lock"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        </div>
+        <div class="field-hint"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Mağaza Yöneticisi yalnızca Kasa Görevlisi ekleyebilir</div>
+      </div>
+      <!-- Mağaza: fixed — madde 3.2 -->
+      <div class="form-row">
+        <div class="field-label">Mağaza</div>
+        <div class="fixed-field-wrapper">
+          <input class="field-input" type="text" value="Kafe Merkez" disabled style="padding-right:32px;">
+          <span class="fixed-lock"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        </div>
+        <div class="field-hint"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Yalnızca kendi mağazanıza kullanıcı ekleyebilirsiniz</div>
+      </div>
+      <div class="form-row">
+        <div class="field-label">Ad Soyad <span style="color:var(--red)">*</span></div>
+        <input class="field-input" id="new-user-name" type="text" placeholder="Örn: Ayşe Yılmaz">
+      </div>
+      <div class="form-row">
+        <div class="field-label">E-posta <span style="color:var(--red)">*</span></div>
+        <input class="field-input" id="new-user-email" type="email" placeholder="kullanici@ornek.com">
+      </div>
+      <!-- Telefon numarası — madde 3.3 -->
+      <div class="form-row">
+        <div class="field-label">Telefon Numarası <span style="color:var(--red)">*</span></div>
+        <input class="field-input" id="new-user-phone" type="tel" placeholder="05XX XXX XX XX">
+      </div>
+      <div class="form-row">
+        <div class="field-label">Şifre <span style="color:var(--red)">*</span></div>
+        <input class="field-input" type="password" placeholder="••••••••">
+      </div>
+      <label class="switch-row">
+        <input class="switch-input" id="new-user-active" type="checkbox" checked>
+        <span class="switch-control"></span>
+        <span class="switch-label">Kullanıcı Aktif</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('add-user-modal')">İptal</button>
+      <button class="btn-save" onclick="saveNewUser()"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- KULLANICI DÜZENLE MODAL -->
+<div class="modal-overlay" id="edit-user-modal" onclick="closeBg(event,'edit-user-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Kullanıcı Düzenle</div>
+      <button class="modal-close" onclick="closeModal('edit-user-modal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field-label">Rol</div>
+        <div class="fixed-field-wrapper">
+          <input class="field-input" type="text" value="Kasa Görevlisi" disabled style="padding-right:32px;">
+          <span class="fixed-lock"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field-label">Mağaza</div>
+        <div class="fixed-field-wrapper">
+          <input class="field-input" type="text" value="Kafe Merkez" disabled style="padding-right:32px;">
+          <span class="fixed-lock"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field-label">Ad Soyad</div>
+        <input class="field-input" type="text" value="Merkez Kasa">
+      </div>
+      <div class="form-row">
+        <div class="field-label">E-posta</div>
+        <input class="field-input" type="email" value="cashier.merkez@kafezinciri.com">
+      </div>
+      <div class="form-row">
+        <div class="field-label">Telefon Numarası</div>
+        <input class="field-input" type="tel" value="0554 XXX XX 64">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('edit-user-modal')">İptal</button>
+      <button class="btn-save"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Güncelle</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFİL & ŞİFRE MODAL -->
+<div class="modal-overlay" id="profile-modal" onclick="closeBg(event,'profile-modal')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Profil &amp; Şifre Değiştir</div>
+      <button class="modal-close" onclick="closeModal('profile-modal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-profile-row">
+        <div class="modal-avatar">M</div>
+        <div>
+          <div class="modal-name">Mehmet Merkez Yöneticisi</div>
+          <div class="modal-email">manager.merkez@kafezinciri.com</div>
+        </div>
+      </div>
+      <div class="pw-section-title">Şifre Değiştir</div>
+      <div class="form-row"><div class="field-label">Mevcut Şifre</div><input class="field-input" type="password" placeholder="••••••••"></div>
+      <div class="form-row"><div class="field-label">Yeni Şifre</div><input class="field-input" type="password" placeholder="••••••••"></div>
+      <div class="form-row"><div class="field-label">Yeni Şifre (Tekrar)</div><input class="field-input" type="password" placeholder="••••••••"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('profile-modal')">İptal</button>
+      <button class="btn-save"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    const el = document.getElementById('nav-' + name);
+    if (el) el.classList.add('active');
+  }
+  function switchCampTab(tab, el) {
+    ['aktif','pasif','tum'].forEach(t => { document.getElementById('camp-tab-'+t).style.display='none'; });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('camp-tab-'+tab).style.display='grid';
+    el.classList.add('active');
+  }
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function closeBg(e, id) { if (e.target===document.getElementById(id)) closeModal(id); }
+  function esc(text) {
+    return String(text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function saveNewUser() {
+    const nameInput = document.getElementById('new-user-name');
+    const emailInput = document.getElementById('new-user-email');
+    const activeInput = document.getElementById('new-user-active');
+    const name = nameInput.value.trim() || 'Yeni Kasa Görevlisi';
+    const email = emailInput.value.trim() || 'kullanici@ornek.com';
+    const isActive = activeInput.checked;
+    const statusClass = isActive ? 'aktif' : 'pasif';
+    const statusText = isActive ? 'Aktif' : 'Pasif';
+    const initial = name.charAt(0).toLocaleUpperCase('tr-TR');
+    document.querySelector('.users-table').insertAdjacentHTML('beforeend', `
+      <div class="table-row">
+        <div class="user-info">
+          <div class="user-avatar">${esc(initial)}</div>
+          <div>
+            <div class="user-name">${esc(name)}</div>
+            <div class="user-email">${esc(email)}</div>
+          </div>
+        </div>
+        <span class="role-badge cashier">Kasa Görevlisi</span>
+        <span style="font-size:13px;color:var(--text)">Kafe Merkez</span>
+        <span class="status-badge ${statusClass}">${statusText}</span>
+        <div class="actions-cell">
+          <button class="btn-icon" title="Düzenle" onclick="openModal('edit-user-modal')">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon del" title="Sil">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `);
+    nameInput.value = '';
+    emailInput.value = '';
+    document.getElementById('new-user-phone').value = '';
+    activeInput.checked = true;
+    closeModal('add-user-modal');
+    showView('users');
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') ['add-user-modal','edit-user-modal','profile-modal'].forEach(closeModal);
+  });
+  // Başlangıç sayfası
+  showView('dashboard');
+</script>
+</body>
+</html>
