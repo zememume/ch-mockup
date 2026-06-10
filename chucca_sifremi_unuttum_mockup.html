@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CHUCCA - Şifremi Unuttum Akışı Mockup</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #dde3eb;
+      --input: #eaf1fb;
+      --green: #17883e;
+      --green-dark: #116b31;
+      --green-soft: #e9f7ee;
+      --blue-soft: #eaf1fb;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --shadow: 0 14px 34px rgba(17, 24, 39, .08), 0 2px 8px rgba(17, 24, 39, .04);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 48px 20px;
+    }
+
+    .shell {
+      width: min(100%, 980px);
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(320px, 1fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .auth-side {
+      display: grid;
+      justify-items: center;
+      gap: 22px;
+    }
+
+    .brand {
+      text-align: center;
+    }
+
+    .logo {
+      font-weight: 950;
+      font-style: italic;
+      letter-spacing: 0;
+      color: #050505;
+      font-size: 39px;
+      line-height: 1;
+      transform: skew(-8deg);
+    }
+
+    .subtitle {
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 390px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      color: #374151;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .input-wrap {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 14px;
+      border-radius: 7px;
+      background: var(--input);
+      border: 1px solid #dfe8f5;
+    }
+
+    .input-wrap svg {
+      flex: 0 0 auto;
+      color: #8492a6;
+    }
+
+    input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #111827;
+      font-weight: 650;
+      min-width: 0;
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-radius: 7px;
+      background: var(--green);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+      transition: .18s ease;
+    }
+
+    .primary:hover {
+      background: var(--green-dark);
+    }
+
+    .secondary {
+      width: 100%;
+      min-height: 42px;
+      border-radius: 7px;
+      border: 1px solid #cfd8e3;
+      background: #fff;
+      color: #374151;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .link-button {
+      border: 0;
+      background: transparent;
+      color: var(--green);
+      font-weight: 800;
+      cursor: pointer;
+      padding: 10px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .stage {
+      display: none;
+    }
+
+    .stage.active {
+      display: block;
+    }
+
+    .screen-title {
+      margin: 0 0 6px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .screen-copy {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 550;
+    }
+
+    .code-box {
+      margin: 16px 0;
+      border: 1px solid #d9e7de;
+      background: var(--green-soft);
+      border-radius: 7px;
+      padding: 14px;
+    }
+
+    .code-label {
+      color: #376044;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .code-value {
+      color: #111827;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .status {
+      margin: 12px 0 16px;
+      min-height: 36px;
+      padding: 9px 11px;
+      border-radius: 7px;
+      background: #fff7e6;
+      color: #8a5200;
+      border: 1px solid #f8d596;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status.verified {
+      background: var(--green-soft);
+      color: #12652e;
+      border-color: #bfe8cc;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid rgba(138, 82, 0, .24);
+      border-top-color: var(--warning);
+      animation: spin 1s linear infinite;
+    }
+
+    .status.verified .spinner {
+      animation: none;
+      border: 0;
+      width: 15px;
+      height: 15px;
+      background: var(--green);
+      clip-path: polygon(14% 53%, 0 67%, 39% 100%, 100% 18%, 84% 5%, 35% 70%);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 12px 0 0;
+    }
+
+    .flow-panel {
+      align-self: stretch;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      min-height: 520px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #edf1f5;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .panel-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .pill {
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: var(--blue-soft);
+      color: #36506f;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 11px;
+      align-items: start;
+      opacity: .42;
+      transition: .2s ease;
+    }
+
+    .step.done,
+    .step.current {
+      opacity: 1;
+    }
+
+    .dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #6b7280;
+      background: #edf1f5;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .step.done .dot {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .step.current .dot {
+      color: #8a5200;
+      background: #fff3d6;
+      outline: 3px solid #fff8ea;
+    }
+
+    .step h3 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 550;
+    }
+
+    .phone-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(16, 24, 40, .42);
+      backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+
+    .phone-overlay.active {
+      display: grid;
+    }
+
+    .phone {
+      width: min(100%, 340px);
+      height: 610px;
+      border-radius: 26px;
+      background: #101820;
+      padding: 11px;
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .32);
+    }
+
+    .phone-screen {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #efe7dd;
+      display: grid;
+      grid-template-rows: 58px 1fr 66px;
+    }
+
+    .wa-head {
+      background: #075e54;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      font-weight: 850;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #d9fdd3;
+      color: #075e54;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .wa-body {
+      padding: 18px 14px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 230px;
+      background: #d9fdd3;
+      border-radius: 7px 7px 0 7px;
+      padding: 10px 12px;
+      color: #111827;
+      font-weight: 850;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, .12);
+    }
+
+    .wa-compose {
+      background: #f0f2f5;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 42px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .wa-input {
+      background: #fff;
+      min-height: 42px;
+      border-radius: 21px;
+      padding: 11px 15px;
+      color: #111827;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 850;
+    }
+
+    .send {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: #00a884;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+      background: #111827;
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 750;
+      z-index: 12;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 880px) {
+      .app {
+        align-items: start;
+      }
+
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-panel {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .app {
+        padding: 28px 14px;
+      }
+
+      .card,
+      .flow-panel {
+        padding: 18px;
+      }
+
+      .panel-head {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="shell">
+      <div class="auth-side">
+        <div class="brand">
+          <div class="logo">CHUCCA</div>
+          <p class="subtitle" id="subtitle">Mağaza yönetim paneline giriş yapın</p>
+        </div>
+
+        <div class="card">
+          <div class="stage active" id="stage-login">
+            <div class="field">
+              <label>Email</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                <input value="manager@bagimsizKafe.com" aria-label="Email">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Şifre</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input value="••••••••" aria-label="Şifre">
+              </div>
+            </div>
+
+            <button class="primary" type="button">
+              Giriş Yap
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </button>
+
+            <button class="link-button" type="button" onclick="goTo('phone')">
+              Şifremi Unuttum
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <div class="stage" id="stage-phone">
+            <h1 class="screen-title">Şifremi Unuttum</h1>
+            <p class="screen-copy">Hesabınıza kayıtlı telefon numarasını girin. Doğrulama için WhatsApp üzerinden tek kullanımlık kod göndermeniz istenecek.</p>
+
+            <div class="field">
+              <label>Telefon Numarası</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 11.2 19 19.5 19.5 0 0 1 5 12.8 19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.7.6 2.5a2 2 0 0 1-.4 2.1L8 9.6a16 16 0 0 0 6.4 6.4l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.6.5 2.5.6a2 2 0 0 1 1.7 2z"/></svg>
+                <input value="+90 532 000 00 00" aria-label="Telefon Numarası">
+              </div>
+            </div>
+
+            <button class="primary" type="button" onclick="goTo('wait')">
+              Devam Et
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </button>
+
+            <button class="link-button" type="button" onclick="goTo('login')">Giriş ekranına dön</button>
+          </div>
+
+          <div class="stage" id="stage-wait">
+            <h1 class="screen-title">WhatsApp Doğrulama</h1>
+            <p class="screen-copy">Aşağıdaki mesajı kayıtlı telefon numaranızdan WhatsApp üzerinden gönderin.</p>
+
+            <div class="code-box">
+              <div class="code-label">Gönderilecek mesaj</div>
+              <div class="code-value">SIFRE 742183</div>
+            </div>
+
+            <div class="status" id="status">
+              <span class="spinner"></span>
+              <span id="statusText">Doğrulama bekleniyor...</span>
+            </div>
+
+            <button class="primary" type="button" onclick="openWhatsapp()">
+              WhatsApp ile Gönder
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+            </button>
+
+            <p class="hint">Bu mockup'ta WhatsApp ekranı temsilidir. Mesaj gönderildiğinde backend doğrulaması yapılmış gibi akış devam eder.</p>
+          </div>
+
+          <div class="stage" id="stage-password">
+            <h1 class="screen-title">Şifre Güncelleme</h1>
+            <p class="screen-copy">WhatsApp doğrulaması tamamlandı. Yeni şifrenizi belirleyerek işlemi bitirin.</p>
+
+            <div class="field">
+              <label>Yeni Şifre</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input value="••••••••••" aria-label="Yeni Şifre">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Yeni Şifre Tekrar</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>
+                <input value="••••••••••" aria-label="Yeni Şifre Tekrar">
+              </div>
+            </div>
+
+            <button class="primary" type="button" onclick="goTo('success')">
+              Şifreyi Güncelle
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+          </div>
+
+          <div class="stage" id="stage-success">
+            <h1 class="screen-title">Şifre Güncellendi</h1>
+            <p class="screen-copy">Reset talebi kapatıldı ve doğrulama kodu tekrar kullanılamaz hale getirildi.</p>
+
+            <div class="status verified">
+              <span class="spinner"></span>
+              <span>İşlem başarıyla tamamlandı.</span>
+            </div>
+
+            <button class="primary" type="button" onclick="goTo('login')">
+              Giriş Ekranına Dön
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="flow-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Şifremi Unuttum Akışı</h2>
+            <p>Admin panelde kullanıcının gördüğü ana adımlar</p>
+          </div>
+          <span class="pill" id="flowPill">Giriş</span>
+        </div>
+
+        <div class="timeline">
+          <div class="step current" data-step="login">
+            <div class="dot">1</div>
+            <div>
+              <h3>Giriş ekranından süreç başlar</h3>
+              <p>Kullanıcı “Şifremi Unuttum” seçeneğine tıklar.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="phone">
+            <div class="dot">2</div>
+            <div>
+              <h3>Kayıtlı telefon numarası alınır</h3>
+              <p>Backend numarayı kontrol eder; kayıt varsa reset talebi oluşturulur.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="wait">
+            <div class="dot">3</div>
+            <div>
+              <h3>Tek kullanımlık kod gösterilir</h3>
+              <p>Kullanıcıdan “SIFRE 742183” mesajını WhatsApp üzerinden göndermesi istenir.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="whatsapp">
+            <div class="dot">4</div>
+            <div>
+              <h3>WhatsApp mesajı gönderilir</h3>
+              <p>Deep link mesajı hazırlar; kullanıcı yalnızca gönder butonuna basar.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="verified">
+            <div class="dot">5</div>
+            <div>
+              <h3>Backend doğrulama yapar</h3>
+              <p>Telefon, kod, süre, açık talep ve tekrar kullanım kontrolleri tamamlanır.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="password">
+            <div class="dot">6</div>
+            <div>
+              <h3>Şifre güncelleme ekranı açılır</h3>
+              <p>Panel, polling sonucu doğrulamayı algılar ve kullanıcıyı otomatik yönlendirir.</p>
+            </div>
+          </div>
+
+          <div class="step" data-step="success">
+            <div class="dot">7</div>
+            <div>
+              <h3>Reset talebi kapatılır</h3>
+              <p>Yeni şifre kaydedilir; kod ve reset talebi tekrar kullanılamaz.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="phone-overlay" id="phoneOverlay" aria-hidden="true">
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="wa-head">
+          <div class="avatar">C</div>
+          <div>
+            <div>CHUCCA Doğrulama</div>
+            <div style="font-size:11px;font-weight:650;opacity:.8">WhatsApp</div>
+          </div>
+        </div>
+        <div class="wa-body">
+          <div class="bubble">SIFRE 742183</div>
+        </div>
+        <div class="wa-compose">
+          <div class="wa-input">SIFRE 742183</div>
+          <button class="send" type="button" onclick="sendWhatsapp()" aria-label="Gönder">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">WhatsApp mesajı gönderildi. Doğrulama bekleniyor...</div>
+
+  <script>
+    const stages = {
+      login: document.getElementById('stage-login'),
+      phone: document.getElementById('stage-phone'),
+      wait: document.getElementById('stage-wait'),
+      password: document.getElementById('stage-password'),
+      success: document.getElementById('stage-success')
+    };
+
+    const subtitle = document.getElementById('subtitle');
+    const flowPill = document.getElementById('flowPill');
+    const statusBox = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const phoneOverlay = document.getElementById('phoneOverlay');
+    const toast = document.getElementById('toast');
+
+    const stageText = {
+      login: ['Mağaza yönetim paneline giriş yapın', 'Giriş'],
+      phone: ['Şifre sıfırlama sürecini başlatın', 'Telefon kontrolü'],
+      wait: ['WhatsApp ile güvenli doğrulama', 'Doğrulama bekleniyor'],
+      password: ['Yeni şifrenizi belirleyin', 'Şifre güncelleme'],
+      success: ['Mağaza yönetim paneline giriş yapın', 'Tamamlandı']
+    };
+
+    const order = ['login', 'phone', 'wait', 'whatsapp', 'verified', 'password', 'success'];
+
+    function setTimeline(activeKey) {
+      const activeIndex = order.indexOf(activeKey);
+      document.querySelectorAll('.step').forEach((step) => {
+        const stepIndex = order.indexOf(step.dataset.step);
+        step.classList.toggle('done', stepIndex >= 0 && stepIndex < activeIndex);
+        step.classList.toggle('current', step.dataset.step === activeKey);
+      });
+    }
+
+    function goTo(stage) {
+      Object.values(stages).forEach((item) => item.classList.remove('active'));
+      stages[stage].classList.add('active');
+      subtitle.textContent = stageText[stage][0];
+      flowPill.textContent = stageText[stage][1];
+
+      if (stage === 'wait') {
+        statusBox.classList.remove('verified');
+        statusText.textContent = 'Doğrulama bekleniyor...';
+      }
+
+      setTimeline(stage);
+    }
+
+    function openWhatsapp() {
+      setTimeline('whatsapp');
+      flowPill.textContent = 'WhatsApp açıldı';
+      phoneOverlay.classList.add('active');
+    }
+
+    function sendWhatsapp() {
+      phoneOverlay.classList.remove('active');
+      showToast('WhatsApp mesajı gönderildi. Backend kontrol ediyor...');
+      setTimeline('verified');
+      flowPill.textContent = 'Backend doğruluyor';
+
+      setTimeout(() => {
+        statusBox.classList.add('verified');
+        statusText.textContent = 'Evet, doğrulandı. Yönlendiriliyor...';
+        showToast('Doğrulama başarılı. Şifre güncelleme ekranı açılıyor.');
+      }, 900);
+
+      setTimeout(() => {
+        goTo('password');
+      }, 1900);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    phoneOverlay.addEventListener('click', (event) => {
+      if (event.target === phoneOverlay) {
+        phoneOverlay.classList.remove('active');
+        setTimeline('wait');
+        flowPill.textContent = 'Doğrulama bekleniyor';
+      }
+    });
+  </script>
+</body>
+</html>
